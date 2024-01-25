@@ -14,7 +14,39 @@ add_slider = st.sidebar.slider(
     0.0, 100.0, (25.0, 75.0)
 )
 
-# Forms
+
+left_column, right_column = st.columns(2)
+# You can use a column just like st.sidebar:
+left_column.button('Press me!')
+
+# Or even better, call Streamlit functions inside a "with" block:
+with right_column:
+    chosen = st.radio(
+        'Sorting hat',
+        ("Gryffindor", "Ravenclaw", "Hufflepuff", "Slytherin"))
+    st.write(f"You are in {chosen} house!")
+
+df = pd.DataFrame({
+    'first column': [1, 2, 3, 4],
+    'second column': [10, 20, 30, 40]
+    })
+
+option = st.selectbox(
+    'Which number do you like best?',
+     df['first column'])
+
+'You selected: ', option
+
+
+if "df" not in st.session_state:
+    st.session_state.df = pd.DataFrame(np.random.randn(20, 2), columns=["x", "y"])
+
+st.header("Choose a datapoint color")
+color = st.color_picker("Color", "#FF0000")
+st.divider()
+st.scatter_chart(st.session_state.df, x="x", y="y", color=color)
+
+
 def get_data():
     df = pd.DataFrame({
         "lat": np.random.randn(200) / 50 + 37.76,
@@ -54,35 +86,3 @@ df['color'] = np.where(df.team=='A',colorA+f'{alphaA:02x}',colorB+f'{alphaB:02x}
 df['size'] = np.where(df.team=='A',sizeA, sizeB)
 
 st.map(df, size='size', color='color')
-
-
-left_column, right_column = st.columns(2)
-# You can use a column just like st.sidebar:
-left_column.button('Press me!')
-
-# Or even better, call Streamlit functions inside a "with" block:
-with right_column:
-    chosen = st.radio(
-        'Sorting hat',
-        ("Gryffindor", "Ravenclaw", "Hufflepuff", "Slytherin"))
-    st.write(f"You are in {chosen} house!")
-
-df = pd.DataFrame({
-    'first column': [1, 2, 3, 4],
-    'second column': [10, 20, 30, 40]
-    })
-
-option = st.selectbox(
-    'Which number do you like best?',
-     df['first column'])
-
-'You selected: ', option
-
-
-if "df" not in st.session_state:
-    st.session_state.df = pd.DataFrame(np.random.randn(20, 2), columns=["x", "y"])
-
-st.header("Choose a datapoint color")
-color = st.color_picker("Color", "#FF0000")
-st.divider()
-st.scatter_chart(st.session_state.df, x="x", y="y", color=color)
