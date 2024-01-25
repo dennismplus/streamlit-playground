@@ -5,6 +5,7 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 from icecream import ic
 
+# Sidebar
 # Add a selectbox to the sidebar:
 add_selectbox = st.sidebar.selectbox(
     'How would you like to be contacted?',
@@ -19,24 +20,26 @@ add_slider = st.sidebar.slider(
 
 # Yahoo Finance
 # Input for the stock ticker
-ticker = st.text_input("Enter the stock ticker", "MSFT")
+st.header('Input Form', divider='rainbow')
+ticker = st.text_input("Enter the stock ticker", "AAPL")
+period = st.text_input("Enter the stock ticker \n ['1mo', '3mo', '6mo', 'ytd', '1y', '2y', '5y', '10y', 'max']", "1y")
 
 
 @st.cache_data
 def load_data(tick):
     tick_data = yf.Ticker(tick)
-    tick_hist = tick_data.history(period="12mo")
+    tick_hist = tick_data.history(period=period)
 
     tick_hist['MA50'] = tick_hist['Close'].rolling(50).mean()
     return tick_hist
 
 
 hist = load_data(ticker)
-st.header(ticker + ' Close Price (12 months) ', divider='rainbow')
+st.header(ticker + ' Close Price (period of ' + period + ') ', divider='rainbow')
 close_price_df = pd.DataFrame(hist, columns=['Close'])
-st.line_chart(data=close_price_df, x=None, y=None, color=None, width=0, height=0, use_container_width=True)
+st.line_chart(data=close_price_df, x=None, y=None, color="#f446a6", width=0, height=0, use_container_width=True)
 
-st.header(ticker + ' Volume (12 months)', divider='rainbow')
+st.header(ticker + ' Volume (period of ' + period + ') ', divider='rainbow')
 volume_price_df = pd.DataFrame(hist, columns=['Volume'])
 st.bar_chart(data=volume_price_df, x=None, y=None, color="#f446a6", width=0, height=0, use_container_width=True)
 
@@ -44,6 +47,7 @@ st.header(ticker + ' 50-days moving average', divider='rainbow')
 # Set the title of the app
 price_ma = pd.DataFrame(hist, columns=['Close', 'MA50'])
 st.line_chart(data=price_ma, x=None, y=None, color=["#f446a6", "#f2f246"], width=0, height=0, use_container_width=True)
+
 
 ######################################################
 def get_data():
