@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import yfinance as yf
+import matplotlib.pyplot as plt
 from icecream import ic
 
 # Add a selectbox to the sidebar:
@@ -17,16 +18,32 @@ add_slider = st.sidebar.slider(
 )
 
 # Yahoo Finance
-msft = yf.Ticker("MSFT")
-# ic(msft.info)
-hist = msft.history(period="12mo")
-st.header('MSFT Close Price (12 months) ', divider='rainbow')
+# Input for the stock ticker
+ticker = st.text_input("Enter the stock ticker", "MSFT")
+
+
+@st.cache_data
+def load_data(tick):
+    tick_data = yf.Ticker(tick)
+    tick_hist = tick_data.history(period="12mo")
+
+    tick_hist['MA50'] = tick_hist['Close'].rolling(50).mean()
+    return tick_hist
+
+
+hist = load_data(ticker)
+st.header(ticker + ' Close Price (12 months) ', divider='rainbow')
 close_price_df = pd.DataFrame(hist, columns=['Close'])
 st.line_chart(data=close_price_df, x=None, y=None, color=None, width=0, height=0, use_container_width=True)
 
-st.header('MSFT Volume (12 months)', divider='rainbow')
+st.header(ticker + ' Volume (12 months)', divider='rainbow')
 volume_price_df = pd.DataFrame(hist, columns=['Volume'])
 st.bar_chart(data=volume_price_df, x=None, y=None, color="#f446a6", width=0, height=0, use_container_width=True)
+
+st.header(ticker + ' 50-days moving average', divider='rainbow')
+# Set the title of the app
+price_ma = pd.DataFrame(hist, columns=['Close', 'MA50'])
+st.line_chart(data=price_ma, x=None, y=None, color=["#f446a6", "#f2f246"], width=0, height=0, use_container_width=True)
 
 ######################################################
 def get_data():
