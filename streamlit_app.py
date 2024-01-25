@@ -21,19 +21,18 @@ add_slider = st.sidebar.slider(
 # Input for the stock ticker
 st.header('Input Form', divider='rainbow')
 ticker = st.text_input("Enter the stock ticker", "AAPL")
-period = st.text_input("Enter the stock ticker \n ['1mo', '3mo', '6mo', 'ytd', '1y', '2y', '5y', '10y', 'max']", "1y")
+period = st.text_input("Enter the stock ticker ['1mo', '3mo', '6mo', 'ytd', '1y', '2y', '5y', '10y', 'max']", "5y")
 
 
 @st.cache_data
-def load_data(tick):
-    tick_data = yf.Ticker(tick)
-    tick_hist = tick_data.history(period=period)
-
+def load_data(tick, p):
+    tick_hist = yf.download(tick, period=p)
     tick_hist['MA50'] = tick_hist['Close'].rolling(50).mean()
     return tick_hist
 
 
-hist = load_data(ticker)
+hist = load_data(ticker, period)
+ic(hist)
 st.header(ticker + ' Close Price (period of ' + period + ') ', divider='rainbow')
 close_price_df = pd.DataFrame(hist, columns=['Close'])
 st.line_chart(data=close_price_df, x=None, y=None, color="#f446a6", width=0, height=0, use_container_width=True)
