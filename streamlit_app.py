@@ -20,20 +20,6 @@ add_slider = st.sidebar.slider(
 msft = yf.Ticker("MSFT")
 # ic(msft.info)
 hist = msft.history(period="12mo")
-# ic(hist)
-# st.data_editor(
-#     hist,
-#     column_config={
-#         "Close": st.column_config.LineChartColumn(
-#             "Close Prices",
-#             width="medium",
-#             help="The sales volume in the last 6 months",
-#             y_min=0,
-#             y_max=100,
-#         ),
-#     },
-#     hide_index=True,
-# )
 st.header('MSFT Close Price (12 months) ', divider='rainbow')
 close_price_df = pd.DataFrame(hist, columns=['Close'])
 st.line_chart(data=close_price_df, x=None, y=None, color=None, width=0, height=0, use_container_width=True)
@@ -43,30 +29,6 @@ volume_price_df = pd.DataFrame(hist, columns=['Volume'])
 st.bar_chart(data=volume_price_df, x=None, y=None, color="#f446a6", width=0, height=0, use_container_width=True)
 
 ######################################################
-left_column, right_column = st.columns(2)
-# You can use a column just like st.sidebar:
-left_column.button('Press me!')
-
-# Or even better, call Streamlit functions inside a "with" block:
-with right_column:
-    chosen = st.radio(
-        'Sorting hat',
-        ("Gryffindor", "Ravenclaw", "Hufflepuff", "Slytherin"))
-    st.write(f"You are in {chosen} house!")
-
-df = pd.DataFrame({
-    'first column': [1, 2, 3, 4],
-    'second column': [10, 20, 30, 40]
-})
-
-option = st.selectbox(
-    'Which number do you like best?',
-    df['first column'])
-
-'You selected: ', option
-
-
-##########################################################
 def get_data():
     df = pd.DataFrame({
         "lat": np.random.randn(200) / 50 + 37.76,
