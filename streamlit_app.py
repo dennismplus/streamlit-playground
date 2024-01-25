@@ -33,11 +33,11 @@ def load_data(tick, p):
 
 hist = load_data(ticker, period)
 ic(hist)
-st.header(ticker + ' Close Price (period of ' + period + ') ', divider='rainbow')
+st.header(ticker + ' Close Price (' + period + ' period) ', divider='rainbow')
 close_price_df = pd.DataFrame(hist, columns=['Close'])
 st.line_chart(data=close_price_df, x=None, y=None, color="#f446a6", width=0, height=0, use_container_width=True)
 
-st.header(ticker + ' Volume (period of ' + period + ') ', divider='rainbow')
+st.header(ticker + ' Volume (' + period + ' period) ', divider='rainbow')
 volume_price_df = pd.DataFrame(hist, columns=['Volume'])
 st.bar_chart(data=volume_price_df, x=None, y=None, color="#f446a6", width=0, height=0, use_container_width=True)
 
