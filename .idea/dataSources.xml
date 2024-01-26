@@ -8,5 +8,12 @@
       <jdbc-url>jdbc:sqlite:streamlit.db</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="postgres@neon" uuid="182f1d7c-0afa-43c4-bea6-cfc2befc0a26">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://ep-calm-star-072623.ap-southeast-1.aws.neon.tech:5432/cdm</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

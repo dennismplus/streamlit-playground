@@ -7,20 +7,7 @@ from sqlalchemy import text
 from streamlit_echarts import st_echarts
 
 # Create the SQL connection to pets_db as specified in your secrets file.
-conn = st.connection('streamlit_db', type='sql')
-
-# Sidebar
-# Add a selectbox to the sidebar:
-add_selectbox = st.sidebar.selectbox(
-    'How would you like to be contacted?',
-    ('Email', 'Home phone', 'Mobile phone')
-)
-
-# Add a slider to the sidebar:
-add_slider = st.sidebar.slider(
-    'Select a range of values',
-    0.0, 100.0, (25.0, 75.0)
-)
+conn = st.connection('local_db_external', type='sql')
 
 # Yahoo Finance
 # Input for the stock ticker
@@ -63,6 +50,7 @@ with conn.session as s:
                 END AS transaction_group,
                 COUNT(*) AS transaction_count
             FROM Transactions
+            WHERE transaction_type = 'Purchase'
             GROUP BY transaction_group;
         """))
     trx_group_df = pd.DataFrame(trx_group, columns=['name', 'value'])
