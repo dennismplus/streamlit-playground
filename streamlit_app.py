@@ -3,6 +3,11 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 from icecream import ic
+from sqlalchemy import text
+from streamlit_echarts import st_echarts
+
+# Create the SQL connection to pets_db as specified in your secrets file.
+conn = st.connection('streamlit_db', type='sql')
 
 # Sidebar
 # Add a selectbox to the sidebar:
@@ -32,7 +37,6 @@ def load_data(tick, p):
 
 
 hist = load_data(ticker, period)
-ic(hist)
 st.header(ticker + ' Close Price (' + period + ' period) ', divider='rainbow')
 close_price_df = pd.DataFrame(hist, columns=['Close'])
 st.line_chart(data=close_price_df, x=None, y=None, color="#f446a6", width=0, height=0, use_container_width=True)
@@ -45,6 +49,58 @@ st.header(ticker + ' 50-days moving average', divider='rainbow')
 # Set the title of the app
 price_ma = pd.DataFrame(hist, columns=['Close', 'MA50'])
 st.line_chart(data=price_ma, x=None, y=None, color=["#f446a6", "#f2f246"], width=0, height=0, use_container_width=True)
+
+# Reward Coupons
+with conn.session as s:
+    trx_group = s.execute(text(
+        """
+            SELECT
+                CASE
+                    WHEN coupon_id IS NULL AND reward_id IS NULL THEN 'Not Using Any'
+                    WHEN coupon_id IS NOT NULL AND reward_id IS NOT NULL THEN 'Using Both'
+                    WHEN coupon_id IS NOT NULL AND reward_id IS NULL THEN 'Using Coupon Only'
+                    WHEN coupon_id IS NULL AND reward_id IS NOT NULL THEN 'Using Reward Only'
+                END AS transaction_group,
+                COUNT(*) AS transaction_count
+            FROM Transactions
+            GROUP BY transaction_group;
+        """))
+    trx_group_df = pd.DataFrame(trx_group, columns=['name', 'value'])
+    pie_chart_dict = trx_group_df.to_dict(orient='records')
+    st.header('Transaction Allocation', divider='rainbow')
+    option = {
+        "legend": {"top": "bottom"},
+        "toolbox": {
+            "show": True,
+            "feature": {
+                "mark": {"show": True},
+                "dataView": {"show": True, "readOnly": False},
+                "restore": {"show": True},
+                "saveAsImage": {"show": True},
+            },
+        },
+        "series": [
+            {
+                "name": "Transaction Allocation",
+                "type": "pie",
+                "radius": [50, 250],
+                "center": ["50%", "50%"],
+                "roseType": "area",
+                "itemStyle": {"borderRadius": 8},
+                "data": pie_chart_dict,
+                "label": {
+                    "formatter": '{b}: {c}',
+                    "backgroundColor": '#F6F8FC',
+                    "borderColor": '#8C8D8E',
+                    "borderWidth": 1,
+                    "borderRadius": 4,
+                }
+            }
+        ],
+    }
+    st_echarts(
+        options=option, height="600px",
+    )
 
 
 ######################################################
