@@ -7,7 +7,7 @@ from sqlalchemy import text
 from streamlit_echarts import st_echarts
 
 # Create the SQL connection to pets_db as specified in your secrets file.
-conn = st.connection('local_postgresql', type='sql')
+conn = st.connection('local_db_external', type='sql')
 
 # Yahoo Finance
 # Input for the stock ticker
