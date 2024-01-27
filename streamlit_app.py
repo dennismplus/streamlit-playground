@@ -7,11 +7,11 @@ from sqlalchemy import text, create_engine
 from streamlit_echarts import st_echarts
 import polars as pl
 
-# Create the SQL connection to pets_db as specified in your secrets file.
-conn = st.connection('neon_db', type='sql')
 # Reward Coupons
 st.title('CDM Rewards and Coupons Consumption Dashboard')
-with conn.session as s:
+# Create the SQL connection to pets_db as specified in your secrets file.
+conn = st.connection('neon_db', type='sql')
+with conn.connect() as s:
     query = """
             SELECT
                 DATE_TRUNC('month', transaction_date) AS month,
@@ -22,13 +22,12 @@ with conn.session as s:
             GROUP BY month
             ORDER BY month;
         """
-    pl_df = pl.read_database(query=query, connection=conn.connect())
+    pl_df = pl.read_database(query=query, connection=s)
     ic(pl_df)
     st.header('Monthly Total Coupons & Rewards Used', divider='rainbow')
     st.bar_chart(data=pl_df, x='month', y=['coupon', 'reward'], color=["#f446a6", "#0000FF"], width=0, height=0,
                  use_container_width=True)
 
-with conn.session as s:
     query = """
             SELECT
                 CASE
@@ -42,7 +41,7 @@ with conn.session as s:
             WHERE transaction_type = 'Purchase'
             GROUP BY trx_group;
         """
-    pl_df = pl.read_database(query, connection=conn.connect())
+    pl_df = pl.read_database(query, connection=s)
     pl_df = pl_df.rename({"trx_group": "name", "count": "value"})
     ic(pl_df)
     st.header('Transaction Allocation', divider='rainbow')
@@ -104,6 +103,9 @@ with conn.session as s:
     st_echarts(
         options=option, height="600px",
     )
+
+    if s:
+        s.close()
 
 # Yahoo Finance
 # Input for the stock ticker
