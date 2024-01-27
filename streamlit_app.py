@@ -32,10 +32,10 @@ with conn.session as s:
     query = """
             SELECT
                 CASE
-                    WHEN coupon_id IS NULL AND reward_id IS NULL THEN 'Not Using Any'
-                    WHEN coupon_id IS NOT NULL AND reward_id IS NOT NULL THEN 'Using Both'
-                    WHEN coupon_id IS NOT NULL AND reward_id IS NULL THEN 'Using Coupon Only'
-                    WHEN coupon_id IS NULL AND reward_id IS NOT NULL THEN 'Using Reward Only'
+                    WHEN coupon_id IS NULL AND reward_id IS NULL THEN 'None'
+                    WHEN coupon_id IS NOT NULL AND reward_id IS NOT NULL THEN 'Both'
+                    WHEN coupon_id IS NOT NULL AND reward_id IS NULL THEN 'Coupon'
+                    WHEN coupon_id IS NULL AND reward_id IS NOT NULL THEN 'Reward'
                 END AS trx_group,
                 COUNT(*) AS count
             FROM Transactions
