@@ -9,35 +9,26 @@ from streamlit_echarts import st_echarts
 # Create the SQL connection to pets_db as specified in your secrets file.
 conn = st.connection('neon_db', type='sql')
 
-# Yahoo Finance
-# Input for the stock ticker
-st.header('Input Form', divider='rainbow')
-ticker = st.text_input("Enter the stock ticker", "AAPL")
-period = st.text_input("Enter the stock ticker ['1mo', '3mo', '6mo', 'ytd', '1y', '2y', '5y', '10y', 'max']", "5y")
-
-
-@st.cache_data
-def load_data(tick, p):
-    tick_hist = yf.download(tick, period=p)
-    tick_hist['MA50'] = tick_hist['Close'].rolling(50).mean()
-    return tick_hist
-
-
-hist = load_data(ticker, period)
-st.header(ticker + ' Close Price (' + period + ' period) ', divider='rainbow')
-close_price_df = pd.DataFrame(hist, columns=['Close'])
-st.line_chart(data=close_price_df, x=None, y=None, color="#f446a6", width=0, height=0, use_container_width=True)
-
-st.header(ticker + ' Volume (' + period + ' period) ', divider='rainbow')
-volume_price_df = pd.DataFrame(hist, columns=['Volume'])
-st.bar_chart(data=volume_price_df, x=None, y=None, color="#f446a6", width=0, height=0, use_container_width=True)
-
-st.header(ticker + ' 50-days moving average', divider='rainbow')
-# Set the title of the app
-price_ma = pd.DataFrame(hist, columns=['Close', 'MA50'])
-st.line_chart(data=price_ma, x=None, y=None, color=["#f446a6", "#f2f246"], width=0, height=0, use_container_width=True)
 
 # Reward Coupons
+st.title('CDM Rewards and Coupons Consumption Dashboard')
+with conn.session as s:
+    grouping_data = s.execute(text(
+        """
+            SELECT
+                DATE_TRUNC('month', transaction_date) AS month,
+                SUM(CASE WHEN coupon_id IS NOT NULL THEN 1 ELSE 0 END) AS coupon,
+                SUM(CASE WHEN reward_id IS NOT NULL THEN 1 ELSE 0 END) AS reward
+            FROM Transactions
+            WHERE coupon_id IS NOT NULL OR reward_id IS NOT NULL
+            GROUP BY month
+            ORDER BY month;
+        """))
+    grouping_df = pd.DataFrame(grouping_data, columns=['month', 'coupon', 'reward'])
+    ic(grouping_df)
+    st.header('Monthly Total Coupons & Rewards Used', divider='rainbow')
+    st.bar_chart(data=grouping_df, x='month', y=['coupon', 'reward'], color=["#FF0000", "#0000FF"], width=0, height=0, use_container_width=True)
+
 with conn.session as s:
     trx_group = s.execute(text(
         """
@@ -96,9 +87,9 @@ with conn.session as s:
                       },
                       "b": {
                         "color": '#4C5058',
-                        "fontSize": 14,
+                        "fontSize": 12,
                         "fontWeight": 'bold',
-                        "lineHeight": 33
+                        "lineHeight": 25
                       },
                       "per": {
                         "color": '#fff',
@@ -114,6 +105,36 @@ with conn.session as s:
     st_echarts(
         options=option, height="600px",
     )
+
+# Yahoo Finance
+# Input for the stock ticker
+st.header('Input Form', divider='rainbow')
+ticker = st.text_input("Enter the stock ticker", "AAPL")
+period = st.text_input("Enter the stock ticker ['1mo', '3mo', '6mo', 'ytd', '1y', '2y', '5y', '10y', 'max']", "5y")
+
+
+@st.cache_data
+def load_data(tick, p):
+    tick_hist = yf.download(tick, period=p)
+    tick_hist['MA50'] = tick_hist['Close'].rolling(50).mean()
+    return tick_hist
+
+
+hist = load_data(ticker, period)
+st.header(ticker + ' Close Price (' + period + ' period) ', divider='rainbow')
+close_price_df = pd.DataFrame(hist, columns=['Close'])
+st.line_chart(data=close_price_df, x=None, y=None, color="#f446a6", width=0, height=0, use_container_width=True)
+
+st.header(ticker + ' Volume (' + period + ' period) ', divider='rainbow')
+volume_price_df = pd.DataFrame(hist, columns=['Volume'])
+st.bar_chart(data=volume_price_df, x=None, y=None, color="#f446a6", width=0, height=0, use_container_width=True)
+
+st.header(ticker + ' 50-days moving average', divider='rainbow')
+# Set the title of the app
+price_ma = pd.DataFrame(hist, columns=['Close', 'MA50'])
+st.line_chart(data=price_ma, x=None, y=None, color=["#f446a6", "#f2f246"], width=0, height=0, use_container_width=True)
+
+
 
 
 ######################################################
