@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 from icecream import ic
-from sqlalchemy import text, create_engine
 from streamlit_echarts import st_echarts
 import polars as pl
 
@@ -27,6 +26,27 @@ with conn.connect() as s:
     st.header('Monthly Total Coupons & Rewards Used', divider='rainbow')
     st.bar_chart(data=pl_df, x='month', y=['coupon', 'reward'], color=["#f446a6", "#0000FF"], width=0, height=0,
                  use_container_width=True)
+
+    # Weekly transactions
+    st.header('Weekly transaction volume and amount', divider='rainbow')
+    query = """
+            SELECT
+                DATE_TRUNC('week', transaction_date) AS transaction_week,
+                COUNT(*) AS transaction_count,
+                CAST(CEIL(SUM(amount)) AS INTEGER) AS total_transaction_amount
+            FROM Transactions
+            GROUP BY transaction_week
+            ORDER BY transaction_week;
+        """
+    weekly_trx_df = pl.read_database(query, connection=s)
+    ic(weekly_trx_df)
+    weekly_trx_df = weekly_trx_df.rename(
+        {"transaction_week": "week", "total_transaction_amount": "amount", "transaction_count": "volume"})
+    st.bar_chart(data=weekly_trx_df, x='week', y=['volume'],
+                 color=["#f446a6"], width=0, height=0, use_container_width=True)
+
+    st.bar_chart(data=weekly_trx_df, x='week', y=['amount'],
+                 color=["#0000FF"], width=0, height=0, use_container_width=True)
 
     query = """
             SELECT
@@ -138,12 +158,11 @@ st.line_chart(data=price_ma, x=None, y=None, color=["#f446a6", "#f2f246"], width
 
 ######################################################
 def get_data():
-    df = pd.DataFrame({
+    return pd.DataFrame({
         "lat": np.random.randn(200) / 50 + 37.76,
         "lon": np.random.randn(200) / 50 + -122.4,
         "team": ['A', 'B'] * 100
     })
-    return df
 
 
 # Initialization
