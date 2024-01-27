@@ -3,19 +3,16 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 from icecream import ic
-from sqlalchemy import text
+from sqlalchemy import text, create_engine
 from streamlit_echarts import st_echarts
 import polars as pl
 
 # Create the SQL connection to pets_db as specified in your secrets file.
 conn = st.connection('neon_db', type='sql')
-
-
 # Reward Coupons
 st.title('CDM Rewards and Coupons Consumption Dashboard')
 with conn.session as s:
-    grouping_data = s.execute(text(
-        """
+    query = """
             SELECT
                 DATE_TRUNC('month', transaction_date) AS month,
                 SUM(CASE WHEN coupon_id IS NOT NULL THEN 1 ELSE 0 END) AS coupon,
@@ -24,29 +21,30 @@ with conn.session as s:
             WHERE coupon_id IS NOT NULL OR reward_id IS NOT NULL
             GROUP BY month
             ORDER BY month;
-        """))
-    grouping_df = pd.DataFrame(grouping_data, columns=['month', 'coupon', 'reward'])
-    ic(grouping_df)
+        """
+    pl_df = pl.read_database(query=query, connection=conn.connect())
+    ic(pl_df)
     st.header('Monthly Total Coupons & Rewards Used', divider='rainbow')
-    st.bar_chart(data=grouping_df, x='month', y=['coupon', 'reward'], color=["#f446a6", "#0000FF"], width=0, height=0, use_container_width=True)
+    st.bar_chart(data=pl_df, x='month', y=['coupon', 'reward'], color=["#f446a6", "#0000FF"], width=0, height=0,
+                 use_container_width=True)
 
 with conn.session as s:
-    trx_group = s.execute(text(
-        """
+    query = """
             SELECT
                 CASE
                     WHEN coupon_id IS NULL AND reward_id IS NULL THEN 'Not Using Any'
                     WHEN coupon_id IS NOT NULL AND reward_id IS NOT NULL THEN 'Using Both'
                     WHEN coupon_id IS NOT NULL AND reward_id IS NULL THEN 'Using Coupon Only'
                     WHEN coupon_id IS NULL AND reward_id IS NOT NULL THEN 'Using Reward Only'
-                END AS transaction_group,
-                COUNT(*) AS transaction_count
+                END AS trx_group,
+                COUNT(*) AS count
             FROM Transactions
             WHERE transaction_type = 'Purchase'
-            GROUP BY transaction_group;
-        """))
-    trx_group_df = pd.DataFrame(trx_group, columns=['name', 'value'])
-    pie_chart_dict = trx_group_df.to_dict(orient='records')
+            GROUP BY trx_group;
+        """
+    pl_df = pl.read_database(query, connection=conn.connect())
+    pl_df = pl_df.rename({"trx_group": "name", "count": "value"})
+    ic(pl_df)
     st.header('Transaction Allocation', divider='rainbow')
     option = {
         "legend": {"top": "bottom"},
@@ -67,7 +65,7 @@ with conn.session as s:
                 "center": ["50%", "50%"],
                 "roseType": "area",
                 "itemStyle": {"borderRadius": 8},
-                "data": pie_chart_dict,
+                "data": pl_df.to_dicts(),
                 "label": {
                     "formatter": '{a|{a}}{abg|}\n{hr|}\n  {b|{b}：}{c}  {per|{d}%}  ',
                     "backgroundColor": '#F6F8FC',
@@ -75,29 +73,29 @@ with conn.session as s:
                     "borderWidth": 1,
                     "borderRadius": 4,
                     "rich": {
-                      "a": {
-                        "color": '#6E7079',
-                        "lineHeight": 22,
-                        "align": 'center'
-                      },
-                      "hr": {
-                        "borderColor": '#8C8D8E',
-                        "width": '100%',
-                        "borderWidth": 1,
-                        "height": 0
-                      },
-                      "b": {
-                        "color": '#4C5058',
-                        "fontSize": 12,
-                        "fontWeight": 'bold',
-                        "lineHeight": 25
-                      },
-                      "per": {
-                        "color": '#fff',
-                        "backgroundColor": '#4C5058',
-                        "padding": [3, 4],
-                        "borderRadius": 4
-                      }
+                        "a": {
+                            "color": '#6E7079',
+                            "lineHeight": 22,
+                            "align": 'center'
+                        },
+                        "hr": {
+                            "borderColor": '#8C8D8E',
+                            "width": '100%',
+                            "borderWidth": 1,
+                            "height": 0
+                        },
+                        "b": {
+                            "color": '#4C5058',
+                            "fontSize": 12,
+                            "fontWeight": 'bold',
+                            "lineHeight": 25
+                        },
+                        "per": {
+                            "color": '#fff',
+                            "backgroundColor": '#4C5058',
+                            "padding": [3, 4],
+                            "borderRadius": 4
+                        }
                     }
                 },
             }
@@ -134,8 +132,6 @@ st.header(ticker + ' 50-days moving average', divider='rainbow')
 # Set the title of the app
 price_ma = pd.DataFrame(hist, columns=['Close', 'MA50'])
 st.line_chart(data=price_ma, x=None, y=None, color=["#f446a6", "#f2f246"], width=0, height=0, use_container_width=True)
-
-
 
 
 ######################################################
