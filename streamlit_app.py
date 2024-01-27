@@ -27,7 +27,7 @@ with conn.session as s:
     grouping_df = pd.DataFrame(grouping_data, columns=['month', 'coupon', 'reward'])
     ic(grouping_df)
     st.header('Monthly Total Coupons & Rewards Used', divider='rainbow')
-    st.bar_chart(data=grouping_df, x='month', y=['coupon', 'reward'], color=["#FF0000", "#0000FF"], width=0, height=0, use_container_width=True)
+    st.bar_chart(data=grouping_df, x='month', y=['coupon', 'reward'], color=["#f446a6", "#0000FF"], width=0, height=0, use_container_width=True)
 
 with conn.session as s:
     trx_group = s.execute(text(
