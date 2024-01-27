@@ -5,6 +5,7 @@ import yfinance as yf
 from icecream import ic
 from sqlalchemy import text
 from streamlit_echarts import st_echarts
+import polars as pl
 
 # Create the SQL connection to pets_db as specified in your secrets file.
 conn = st.connection('neon_db', type='sql')
