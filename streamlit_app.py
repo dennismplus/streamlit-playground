@@ -58,7 +58,7 @@ with conn.connect() as s:
                 END AS trx_group,
                 COUNT(*) AS count
             FROM Transactions
-            WHERE transaction_type = 'Purchase'
+            WHERE transaction_type = 'PURCHASE'::transaction_type_enum
             GROUP BY trx_group;
         """
     pl_df = pl.read_database(query, connection=s)
